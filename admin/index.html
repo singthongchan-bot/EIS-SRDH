@@ -23,7 +23,10 @@ async function api(path,body){const r=await fetch('/api/admin/'+path,{method:bod
 function show(m){const c=m.counts||{};['appt','walk','sched'].forEach(k=>$('c_'+k).textContent=(c[k]||0).toLocaleString());['appt','walk'].forEach(k=>$('r_'+k).textContent=m.range&&m.range[k]?m.range[k].join(' ถึง '):'');$('upd').textContent=m.updated?'อัปเดตล่าสุด '+new Date(m.updated).toLocaleString('th-TH'):''}
 async function login(){try{PW=$('pw').value||PW;show(await api('status'));sessionStorage.setItem('pw',PW);$('app').hidden=false;$('lerr').textContent=''}catch(e){$('lerr').textContent=e.message}}
 $('login').onclick=login;if(PW){login()}
-function ymd(v){if(v==null||v==='')return null;const s=String(v).trim();let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/),y,mo,d;if(m){y=+m[1];mo=m[2];d=m[3]}else if(m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/)){y=+m[3];mo=m[2].padStart(2,'0');d=m[1].padStart(2,'0')}else return null;if(y>2400)y-=543;return y+'-'+mo+'-'+d}
+function ymd(v){if(v==null||v==='')return null;let y,mo,d;
+if(typeof v==='number'){if(v<20000)return null;const p=XLSX.SSF.parse_date_code(v);y=p.y;mo=String(p.m).padStart(2,'0');d=String(p.d).padStart(2,'0')}
+else{const s=String(v).trim();let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m){y=+m[1];mo=m[2];d=m[3]}else if(m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/)){y=+m[3];mo=m[2].padStart(2,'0');d=m[1].padStart(2,'0')}else return null}
+if(y>2400)y-=543;return y+'-'+mo+'-'+d}
 const NEED={appt:['vn','lct','ส่งตรวจ','dct'],walk:['vn','lct','ส่งตรวจ'],sched:['รหัสคลินิก','วันทำการ','รหัสแพทย์','รหัสเวลาทำการหลัก','รหัสเวลาทำการย่อย','จำนวนนัดย่อย']};
 function toRecords(k,rows,is1){const out=[];for(const r of rows){let x;
 if(k=='sched'){if(r['รหัสคลินิก']==null)continue;x=[+r['รหัสคลินิก'],String(r['วันทำการ']).trim(),String(r['รหัสแพทย์']),+r['รหัสเวลาทำการหลัก'],+r['รหัสเวลาทำการย่อย'],+r['จำนวนนัดย่อย']||0,is1]}
@@ -32,12 +35,12 @@ KINDS.forEach(([k,n])=>{const log=m=>{$('l_'+k).className='log';$('l_'+k).textCo
 $('f_'+k).onchange=e=>{if(k=='sched'&&e.target.files[0])$('t_sched').value=/ไม่ใช่|ไม่ใช้/.test(e.target.files[0].name)?'0':'1'};
 $('i_'+k).onclick=async()=>{const fs=[...$('f_'+k).files];if(!fs.length)return bad('กรุณาเลือกไฟล์');$('i_'+k).disabled=true;try{
 for(const [fi,f] of fs.entries()){log(`(${fi+1}/${fs.length}) กำลังอ่าน ${f.name} … ไฟล์ใหญ่อาจใช้เวลาหลายนาที`);await new Promise(r=>setTimeout(r,50));
-const wb=XLSX.read(await f.arrayBuffer(),{type:'array',dense:true});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{raw:false,dateNF:'yyyy-mm-dd hh:mm:ss',defval:null});
+const wb=XLSX.read(await f.arrayBuffer(),{type:'array',dense:true});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null});
 if(!rows.length)throw new Error('ไม่พบข้อมูลในไฟล์');const keys=Object.keys(rows[0]).map(s=>s.trim());const miss=NEED[k].filter(c=>!keys.includes(c));if(miss.length)throw new Error('ไฟล์ไม่ตรงชนิดข้อมูล ขาดคอลัมน์: '+miss.join(', '));
-const trimmed=rows.map(r=>{const o={};for(const c in r)o[c.trim()]=r[c];return o});const recs=toRecords(k,trimmed,k=='sched'?+$('t_sched').value:0);let added=0;const B=15000;
+const trimmed=rows.map(r=>{const o={};for(const c in r)o[c.trim()]=r[c];return o});const recs=toRecords(k,trimmed,k=='sched'?+$('t_sched').value:0);if(!recs.length)throw new Error(`อ่านได้ ${rows.length.toLocaleString()} แถว แต่ไม่มีแถวที่นำเข้าได้ (ตัวอย่างค่า ส่งตรวจ: ${JSON.stringify(trimmed[0]['ส่งตรวจ'])}, vn: ${JSON.stringify(trimmed[0].vn)}, lct: ${JSON.stringify(trimmed[0].lct)})`);let added=0;const B=15000;
 for(let i=0;i<recs.length;i+=B){const last=i+B>=recs.length&&fi==fs.length-1;log(`(${fi+1}/${fs.length}) ${f.name}: อัปโหลด ${Math.min(i+B,recs.length).toLocaleString()}/${recs.length.toLocaleString()}`);const j=await api('import/'+k,{records:recs.slice(i,i+B),done:last});added+=j.added;if(j.meta)show(j.meta)}
 log(`${f.name}: เพิ่มใหม่ ${added.toLocaleString()} จาก ${recs.length.toLocaleString()} รายการ (ที่เหลือซ้ำกับข้อมูลเดิม)`)}
-log('นำเข้าเสร็จสิ้น')}catch(e){bad('ผิดพลาด: '+e.message)}$('i_'+k).disabled=false};
+log($('l_'+k).textContent+'\nนำเข้าเสร็จสิ้น')}catch(e){bad('ผิดพลาด: '+e.message)}$('i_'+k).disabled=false};
 $('x_'+k).onclick=async()=>{if(!confirm('ยืนยันล้าง'+n+'ทั้งหมด? ย้อนกลับไม่ได้'))return;try{const j=await api('clear/'+k,{});show(j.meta);log('ล้าง'+n+'แล้ว')}catch(e){bad(e.message)}}});
 $('clr_all').onclick=async()=>{if(!confirm('ยืนยันล้างข้อมูลทั้งหมด? ย้อนกลับไม่ได้'))return;try{show((await api('clear/all',{})).meta)}catch(e){alert(e.message)}};
 </script></body></html>
