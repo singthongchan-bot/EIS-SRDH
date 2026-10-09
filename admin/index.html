@@ -16,7 +16,7 @@ input[type=password],select{font:inherit;padding:8px;border:1px solid var(--bd);
 <div id="cards"></div>
 <div class="box"><h2>ล้างข้อมูลทั้งหมด</h2><p class="m">ลบข้อมูลทั้ง 3 ชุด แดชบอร์ดจะว่างเปล่า</p><button class="d" id="clr_all">ล้างข้อมูลทั้งหมด</button></div></div></main>
 <script>
-const $=id=>document.getElementById(id);let PW=sessionStorage.getItem('pw')||'';
+const $=id=>document.getElementById(id);let NAMES={};let PW=sessionStorage.getItem('pw')||'';
 const KINDS=[['appt','ไฟล์นัด','ต้องมีคอลัมน์: vn, lct, ส่งตรวจ, dct','ไม่ซ้ำตาม VN + lct + วันที่'],['walk','ไฟล์ Walk-in (w)','ต้องมีคอลัมน์: vn, lct, ส่งตรวจ','ไม่ซ้ำตาม VN + lct + วันที่'],['sched','ตารางนัดแพทย์','ต้องมีคอลัมน์: รหัสคลินิก, วันทำการ, รหัสแพทย์, รหัสเวลาทำการหลัก, รหัสเวลาทำการย่อย, จำนวนนัดย่อย','เลือกประเภทตารางต่อไฟล์ (นัดย่อย 1 ชม. / ไม่ใช่ 1 ชม.)']];
 $('cards').innerHTML=KINDS.map(([k,n,c,d])=>`<div class="box"><h2>${n}</h2><div class="m">${c}<br>การนำเข้าเป็นการ <b>เพิ่ม</b> ต่อจากข้อมูลเดิม (${d})</div><div class="row"><input type="file" id="f_${k}" accept=".xls,.xlsx" multiple>${k=='sched'?'<select id="t_sched"><option value="1">นัดย่อย 1 ชม.</option><option value="0">ไม่ใช่ 1 ชม.</option></select>':''}<button id="i_${k}">นำเข้า</button><button class="d" id="x_${k}">ล้าง${n}</button></div><div class="log" id="l_${k}"></div></div>`).join('');
 async function api(path,body){const r=await fetch('/api/admin/'+path,{method:body?'POST':'GET',headers:{'x-admin-password':PW,'content-type':'application/json'},body:body?JSON.stringify(body):undefined});const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);return j}
@@ -29,16 +29,16 @@ else{const s=String(v).trim();let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m){y=
 if(y>2400)y-=543;return y+'-'+mo+'-'+d}
 const NEED={appt:['vn','lct','ส่งตรวจ','dct'],walk:['vn','lct','ส่งตรวจ'],sched:['รหัสคลินิก','วันทำการ','รหัสแพทย์','รหัสเวลาทำการหลัก','รหัสเวลาทำการย่อย','จำนวนนัดย่อย']};
 function toRecords(k,rows,is1){const out=[];for(const r of rows){let x;
-if(k=='sched'){if(r['รหัสคลินิก']==null)continue;x=[+r['รหัสคลินิก'],String(r['วันทำการ']).trim(),String(r['รหัสแพทย์']),+r['รหัสเวลาทำการหลัก'],+r['รหัสเวลาทำการย่อย'],+r['จำนวนนัดย่อย']||0,is1]}
-else{const d=ymd(r['ส่งตรวจ']);if(!d||r.vn==null||r.lct==null)continue;x=[String(r.vn),+r.lct,d];if(k=='appt')x.push(r.dct==null?'':String(r.dct))}out.push(x)}return out}
+if(k=='sched'){if(r['รหัสคลินิก']==null)continue;if(r['คลินิก'])NAMES[+r['รหัสคลินิก']]=String(r['คลินิก']).trim();x=[+r['รหัสคลินิก'],String(r['วันทำการ']).trim(),String(r['รหัสแพทย์']),+r['รหัสเวลาทำการหลัก'],+r['รหัสเวลาทำการย่อย'],+r['จำนวนนัดย่อย']||0,is1]}
+else{const d=ymd(r['ส่งตรวจ']);if(!d||r.vn==null||r.lct==null)continue;if(r.lct_name)NAMES[+r.lct]=String(r.lct_name).trim();x=[String(r.vn),+r.lct,d];if(k=='appt')x.push(r.dct==null?'':String(r.dct))}out.push(x)}return out}
 KINDS.forEach(([k,n])=>{const log=m=>{$('l_'+k).className='log';$('l_'+k).textContent=m},bad=m=>{$('l_'+k).className='log err';$('l_'+k).textContent=m};
 $('f_'+k).onchange=e=>{if(k=='sched'&&e.target.files[0])$('t_sched').value=/ไม่ใช่|ไม่ใช้/.test(e.target.files[0].name)?'0':'1'};
 $('i_'+k).onclick=async()=>{const fs=[...$('f_'+k).files];if(!fs.length)return bad('กรุณาเลือกไฟล์');$('i_'+k).disabled=true;try{
 for(const [fi,f] of fs.entries()){log(`(${fi+1}/${fs.length}) กำลังอ่าน ${f.name} … ไฟล์ใหญ่อาจใช้เวลาหลายนาที`);await new Promise(r=>setTimeout(r,50));
 const wb=XLSX.read(await f.arrayBuffer(),{type:'array',dense:true});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:null});
 if(!rows.length)throw new Error('ไม่พบข้อมูลในไฟล์');const keys=Object.keys(rows[0]).map(s=>s.trim());const miss=NEED[k].filter(c=>!keys.includes(c));if(miss.length)throw new Error('ไฟล์ไม่ตรงชนิดข้อมูล ขาดคอลัมน์: '+miss.join(', '));
-const trimmed=rows.map(r=>{const o={};for(const c in r)o[c.trim()]=r[c];return o});const recs=toRecords(k,trimmed,k=='sched'?+$('t_sched').value:0);if(!recs.length)throw new Error(`อ่านได้ ${rows.length.toLocaleString()} แถว แต่ไม่มีแถวที่นำเข้าได้ (ตัวอย่างค่า ส่งตรวจ: ${JSON.stringify(trimmed[0]['ส่งตรวจ'])}, vn: ${JSON.stringify(trimmed[0].vn)}, lct: ${JSON.stringify(trimmed[0].lct)})`);let added=0;const B=15000;
-for(let i=0;i<recs.length;i+=B){const last=i+B>=recs.length&&fi==fs.length-1;log(`(${fi+1}/${fs.length}) ${f.name}: อัปโหลด ${Math.min(i+B,recs.length).toLocaleString()}/${recs.length.toLocaleString()}`);const j=await api('import/'+k,{records:recs.slice(i,i+B),done:last});added+=j.added;if(j.meta)show(j.meta)}
+const trimmed=rows.map(r=>{const o={};for(const c in r)o[c.trim()]=r[c];return o});NAMES={};const recs=toRecords(k,trimmed,k=='sched'?+$('t_sched').value:0);if(!recs.length)throw new Error(`อ่านได้ ${rows.length.toLocaleString()} แถว แต่ไม่มีแถวที่นำเข้าได้ (ตัวอย่างค่า ส่งตรวจ: ${JSON.stringify(trimmed[0]['ส่งตรวจ'])}, vn: ${JSON.stringify(trimmed[0].vn)}, lct: ${JSON.stringify(trimmed[0].lct)})`);let added=0;const B=15000;
+for(let i=0;i<recs.length;i+=B){const last=i+B>=recs.length&&fi==fs.length-1;log(`(${fi+1}/${fs.length}) ${f.name}: อัปโหลด ${Math.min(i+B,recs.length).toLocaleString()}/${recs.length.toLocaleString()}`);const j=await api('import/'+k,{records:recs.slice(i,i+B),done:last,names:i==0?NAMES:undefined});added+=j.added;if(j.meta)show(j.meta)}
 log(`${f.name}: เพิ่มใหม่ ${added.toLocaleString()} จาก ${recs.length.toLocaleString()} รายการ (ที่เหลือซ้ำกับข้อมูลเดิม)`)}
 log($('l_'+k).textContent+'\nนำเข้าเสร็จสิ้น')}catch(e){bad('ผิดพลาด: '+e.message)}$('i_'+k).disabled=false};
 $('x_'+k).onclick=async()=>{if(!confirm('ยืนยันล้าง'+n+'ทั้งหมด? ย้อนกลับไม่ได้'))return;try{const j=await api('clear/'+k,{});show(j.meta);log('ล้าง'+n+'แล้ว')}catch(e){bad(e.message)}}});
