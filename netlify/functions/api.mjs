@@ -1,6 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { compute } from './compute.mjs';
-const st = () => getStore('opd');
+const st = () => getStore({ name: 'opd', consistency: 'strong' }); // อ่านหลังเขียนต้องเห็นข้อมูลล่าสุดทันที
 const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
 const KEY = { appt: r => r[0] + '|' + r[1] + '|' + r[2], walk: r => r[0] + '|' + r[1] + '|' + r[2], sched: r => r.slice(0, 5).join('|') + '|' + r[6] };
 const load = async k => (await st().get(k, { type: 'json' })) || [];
@@ -39,4 +39,3 @@ export default async (req) => {
   return J({ error: 'not found' }, 404);
 };
 export const config = { path: '/api/*' };
-
