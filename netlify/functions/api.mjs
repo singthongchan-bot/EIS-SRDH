@@ -8,7 +8,8 @@ const range = a => { const d = a.map(r => r[2]).filter(Boolean).sort(); return d
 
 async function rebuild() {
   const [appt, walk, sched] = await Promise.all([load('appt'), load('walk'), load('sched')]);
-  const out = { rows: compute({ appt, walk, sched }), meta: { updated: new Date().toISOString(),
+  const names = (await st().get('names', { type: 'json' })) || {};
+  const out = { rows: compute({ appt, walk, sched, names }), meta: { updated: new Date().toISOString(),
     counts: { appt: appt.length, walk: walk.length, sched: sched.length }, range: { appt: range(appt), walk: range(walk) } } };
   await st().setJSON('result', out); return out.meta;
 }
@@ -26,11 +27,17 @@ export default async (req) => {
   if (action === 'clear') {
     const ks = kind === 'all' ? ['appt', 'walk', 'sched'] : KEY[kind] ? [kind] : null;
     if (!ks) return J({ error: 'ชนิดข้อมูลไม่ถูกต้อง' }, 400);
+    if (kind === 'all') await st().delete('names');
     for (const k of ks) await st().delete(k);
     return J({ ok: true, meta: await rebuild() });
   }
   if (action === 'import' && KEY[kind]) {
-    const { records = [], done = false } = await req.json();
+    const { records = [], done = false, names } = await req.json();
+    if (names && Object.keys(names).length) {
+      const cn = (await st().get('names', { type: 'json' })) || {};
+      for (const k in names) if (!(kind === 'sched' && cn[k])) cn[k] = names[k];
+      await st().setJSON('names', cn);
+    }
     const cur = await load(kind), seen = new Set(cur.map(KEY[kind])); let added = 0;
     for (const r of records) { const k = KEY[kind](r); if (!seen.has(k)) { seen.add(k); cur.push(r); added++; } }
     await st().setJSON(kind, cur);
