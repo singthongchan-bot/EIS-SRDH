@@ -9,8 +9,8 @@ const range = a => { const d = a.map(r => r[2]).filter(Boolean).sort(); return d
 
 async function rebuild() {
   const [appt, walk, sched] = await Promise.all([load('appt'), load('walk'), load('sched')]);
-  const names = (await st().get('names', { type: 'json' })) || {};
-  const out = { rows: compute({ appt, walk, sched, names }), meta: { v: 3, updated: new Date().toISOString(),
+  const names = (await st().get('names', { type: 'json' })) || {}, docNames = (await st().get('docnames', { type: 'json' })) || {};
+  const out = { rows: compute({ appt, walk, sched, names }), docNames, meta: { v: 4, docNamed: Object.keys(docNames).length, updated: new Date().toISOString(),
     counts: { appt: appt.length, walk: walk.length, sched: sched.length }, timed: { appt: appt.filter(r => r.length > 4).length, walk: walk.filter(r => r.length > 4).length }, range: { appt: range(appt), walk: range(walk) } } };
   await st().setJSON('result', out); return out.meta;
 }
@@ -18,7 +18,7 @@ export default async (req) => {
   const p = new URL(req.url).pathname.replace(/^\/api\/?/, '');
   if (req.method === 'GET' && p === 'data') {
     let res = await st().get('result', { type: 'json' });
-    if (res && res.rows?.length && res.meta?.v !== 3) { await rebuild(); res = await st().get('result', { type: 'json' }); } // ผลเก่ายังไม่มีข้อมูลรายเดือน/รายวัน
+    if (res && res.rows?.length && res.meta?.v !== 4) { await rebuild(); res = await st().get('result', { type: 'json' }); } // ผลเก่ายังไม่มีข้อมูลรายเดือนของแพทย์/ชื่อแพทย์
     return J(res || { rows: [], meta: { counts: { appt: 0, walk: 0, sched: 0 } } });
   }
   if (req.method === 'GET' && p === 'compare') return J({ ...(await loadCompare()), sourceUrl: SOURCE_URL });
@@ -36,7 +36,7 @@ export default async (req) => {
   if (action === 'clear') {
     const ks = kind === 'all' ? ['appt', 'walk', 'sched'] : KEY[kind] ? [kind] : null;
     if (!ks) return J({ error: 'ชนิดข้อมูลไม่ถูกต้อง' }, 400);
-    if (kind === 'all') await st().delete('names');
+    if (kind === 'all') { await st().delete('names'); await st().delete('docnames'); }
     for (const k of ks) await st().delete(k);
     return J({ ok: true, meta: await rebuild() });
   }
@@ -49,7 +49,12 @@ export default async (req) => {
     } catch (e) { return J({ error: e.message }, 400); }
   }
   if (action === 'import' && KEY[kind]) {
-    const { records = [], done = false, names } = await req.json();
+    const { records = [], done = false, names, docNames } = await req.json();
+    if (kind === 'appt' && docNames && Object.keys(docNames).length) { // ชื่อแพทย์จากไฟล์นัด คอลัมน์ AB (ไฟล์ที่นำเข้าล่าสุดเป็นค่าปัจจุบัน)
+      const cd = (await st().get('docnames', { type: 'json' })) || {};
+      for (const k in docNames) { const v = String(docNames[k] ?? '').trim().slice(0, 120); if (v) cd[k] = v; }
+      await st().setJSON('docnames', cd);
+    }
     if (names && Object.keys(names).length) {
       const cn = (await st().get('names', { type: 'json' })) || {};
       for (const k in names) if (!(kind === 'sched' && cn[k])) cn[k] = names[k];
