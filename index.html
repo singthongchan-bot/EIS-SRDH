@@ -45,7 +45,7 @@ td{background:var(--card)}tfoot td{background:var(--pl)}.vs{overflow:auto}
 .sec{margin:26px 0 12px}.st{margin:0;font-size:21px;color:var(--tx)}.sd{margin:4px 0 0;color:var(--mut);font-size:13.5px}.sd a{color:var(--chl)}
 .g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:16px;margin-bottom:16px}@media(max-width:520px){.g2{grid-template-columns:1fr}}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px 20px;margin-bottom:16px;min-width:0}.g2 .card{margin-bottom:0}
-.card h3{margin:0;font-size:15.5px;color:var(--tx)}.cs{margin:4px 0 12px;color:var(--mut);font-size:12.5px;line-height:1.6}.cv{position:relative}
+.card h3{margin:0;font-size:15.5px;color:var(--tx)}.cs{margin:4px 0 12px;color:var(--mut);font-size:12.5px;line-height:1.6}.cv{position:relative}.emp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--mut);font-size:13px;line-height:1.7;background:var(--card);border:1px dashed var(--bd);border-radius:10px}.emp b{color:var(--tx)}
 .lg{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;color:var(--mut);font-size:12.5px}.lg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .cbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:12px}.cbar select{font:inherit;padding:7px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);margin-left:6px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
@@ -175,18 +175,20 @@ options:{layout:{padding:{top:18}},plugins:{legend:{display:false},deco:{target:
 // ---------- เวลาแต่ละขั้นตอน + รายแพทย์ ----------
 const STEP=[['ส่งตรวจ → ซักประวัติ','--s1'],['ซักประวัติ → พบแพทย์','--s2'],['พบแพทย์ → ตรวจเสร็จ','--s3'],['ตรวจเสร็จ → รับยา','--s4']];
 const addA=(a,b)=>{for(let i=0;i<8;i++)a[i]+=b[i]||0;return a},stM=a=>[0,1,2,3].map(i=>a[i*2+1]?Math.round(a[i*2]/a[i*2+1]):null);
+const NOT='<div><b>ยังไม่มีข้อมูลเวลาในระบบ</b><br>ข้อมูลดิบที่นำเข้าก่อนหน้านี้เก็บเฉพาะ VN, คลินิก, วันที่ และรหัสแพทย์ ยังไม่มีคอลัมน์เวลา (M, N, O, P, U, AD, AE)<br>ผู้ดูแลระบบนำเข้าไฟล์นัดและ Walk-in ชุดเดิมอีกครั้งที่ <a href="/admin">/admin</a> (ไม่ต้องล้างข้อมูล) ระบบจะเติมเวลาให้รายการเดิมอัตโนมัติ</div>';
+function empty(id,on){const w=$(id).parentElement;let e=w.querySelector('.emp');if(on){if(!e){e=document.createElement('div');e.className='emp';w.append(e)}e.innerHTML=NOT}else if(e)e.remove()}
 function stepChart(id,labels,mat,cnt,fmtL){const tx=css('--tx');const tot=mat.map(r=>r.some(v=>v!=null)?r.reduce((s,v)=>s+(v||0),0):null);
 draw(id,{type:'bar',data:{labels,datasets:STEP.map(([l,c],si)=>({label:l,data:mat.map(r=>r[si]),backgroundColor:css(c),inside:1,borderSkipped:false,borderRadius:3,barPercentage:.7,borderColor:css('--card'),borderWidth:{right:2},...(si==3?{end:i=>tot[i]==null?null:tot[i],endColor:()=>tx}:{})}))},
 options:{indexAxis:'y',layout:{padding:{right:40}},plugins:{legend:{display:false},tooltip:{mode:'index',callbacks:{label:c=>' '+c.dataset.label+': '+(c.raw??'–')+' นาที',footer:it=>'รวม '+(tot[it[0].dataIndex]??'–')+' นาที · '+F(cnt[it[0].dataIndex])+' ราย'}}},
 scales:{x:{stacked:true,beginAtZero:true,grid:{display:false},ticks:{display:false},title:{display:true,text:'นาที (สะสมตลอดเส้นทางผู้ป่วย)',color:css('--mut')}},y:{stacked:true,grid:{display:false},ticks:{color:tx}}}}})}
 function drawSteps(rows){$('stLg').innerHTML=STEP.map(([l,c])=>`<span><i style="background:var(${c})"></i>${l}</span>`).join('');
 const mo={};rows.forEach(r=>Object.entries(r.steps||{}).forEach(([k,a])=>addA(mo[k]||(mo[k]=Array(8).fill(0)),a)));
-const mk=Object.keys(mo).sort();$('c7w').style.height=Math.max(160,mk.length*58+70)+'px';
-stepChart('c7',mk.map(ymTH),mk.map(k=>stM(mo[k])),mk.map(k=>Math.max(...[1,3,5,7].map(i=>mo[k][i]))));
-$('c7s').textContent=mk.length?'ช่วงข้อมูล '+ymTH(mk[0])+(mk.length>1?' – '+ymTH(mk[mk.length-1]):''):'ยังไม่มีข้อมูลเวลา – นำเข้าไฟล์นัด/Walk-in ใหม่ที่หน้า /admin เพื่อเติมเวลาแต่ละขั้นตอน';
+const mk=Object.keys(mo).filter(k=>[1,3,5,7].some(i=>mo[k][i])).sort();$('c7w').style.height=Math.max(160,mk.length*58+70)+'px';
+empty('c7',!mk.length);stepChart('c7',mk.map(ymTH),mk.map(k=>stM(mo[k])),mk.map(k=>Math.max(...[1,3,5,7].map(i=>mo[k][i]))));
+$('c7s').textContent=mk.length?'ช่วงข้อมูล '+ymTH(mk[0])+(mk.length>1?' – '+ymTH(mk[mk.length-1]):''):'';
 const cl=rows.map(r=>{const a=Object.values(r.steps||{}).reduce(addA,Array(8).fill(0));return{n:r.name,m:stM(a),c:Math.max(...[1,3,5,7].map(i=>a[i])),v:r.appt+r.walk}}).filter(x=>x.c).sort((a,b)=>b.v-a.v).slice(0,15)
 .sort((a,b)=>b.m.reduce((s,v)=>s+(v||0),0)-a.m.reduce((s,v)=>s+(v||0),0));
-stepChart('c8',cl.map(x=>x.n),cl.map(x=>x.m),cl.map(x=>x.c))}
+empty('c8',!cl.length);stepChart('c8',cl.map(x=>x.n),cl.map(x=>x.m),cl.map(x=>x.c))}
 let dK='n',dD=-1;
 function drawDocs(rows){const M=new Map();rows.forEach(r=>Object.entries(r.docs||{}).forEach(([k,[n,d,e,en,w,wn]])=>{const o=M.get(k)||{k,n:0,d:0,e:0,en:0,w:0,wn:0,top:null,tn:0};
 o.n+=n;o.d+=d;o.e+=e;o.en+=en;o.w+=w;o.wn+=wn;if(n>o.tn){o.tn=n;o.top=r.name}const cl=o.cl||(o.cl=new Set());cl.add(r.name);M.set(k,o)}));
@@ -197,7 +199,7 @@ const mpd=top.length?top.reduce((s,o)=>s+o.pd,0)/top.length:null,ve=top.filter(o
 draw('c9',{type:'bar',data:{labels:lab,datasets:[{data:top.map(o=>o.pd),backgroundColor:top.map(o=>o.pd>mpd?hl:gy),borderRadius:4,barPercentage:.72,fmt:v=>v,endColor:i=>top[i].pd>mpd?hl:css('--mut')}]},
 options:{indexAxis:'y',layout:{padding:{right:36,bottom:20}},plugins:{legend:{display:false},deco:{target:{axis:'x',value:mpd,text:mpd?'เฉลี่ย '+r1(mpd)+' ราย/วัน':''}},tooltip:{callbacks:{label:c=>{const o=top[c.dataIndex];return[' '+o.pd+' ราย/วัน',' รวม '+F(o.n)+' ราย · '+o.d+' วันออกตรวจ']}}}},
 scales:{x:{beginAtZero:true,grid:{display:false},ticks:{display:false}},y:{grid:{display:false},ticks:{color:tx,font:{size:11}}}}}});
-const ec=v=>v==null?gy:v>mex*1.2?css('--cbad'):v<mex*.8?css('--cok'):gy;
+empty('c10',!ve.length);const ec=v=>v==null?gy:v>mex*1.2?css('--cbad'):v<mex*.8?css('--cok'):gy;
 draw('c10',{type:'bar',data:{labels:lab,datasets:[{data:top.map(o=>o.ex),backgroundColor:top.map(o=>ec(o.ex)),borderRadius:4,barPercentage:.72,fmt:r1,endColor:i=>css('--mut')}]},
 options:{indexAxis:'y',layout:{padding:{right:40,bottom:20}},plugins:{legend:{display:false},deco:{target:{axis:'x',value:mex,text:mex?'เฉลี่ย '+r1(mex)+' นาที':''}},tooltip:{callbacks:{label:c=>{const o=top[c.dataIndex];return[' ตรวจเฉลี่ย '+r1(o.ex)+' นาที/ราย ('+F(o.en)+' รายที่มีเวลา)',' รอพบแพทย์เฉลี่ย '+r1(o.wt)+' นาที',' เวลาตรวจรวม ≈ '+r1(o.hr)+' ชม./วัน']}}}},
 scales:{x:{beginAtZero:true,grid:{display:false},ticks:{display:false}},y:{grid:{display:false},ticks:{color:tx,font:{size:11}}}}}});

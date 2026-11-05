@@ -11,7 +11,7 @@ async function rebuild() {
   const [appt, walk, sched] = await Promise.all([load('appt'), load('walk'), load('sched')]);
   const names = (await st().get('names', { type: 'json' })) || {};
   const out = { rows: compute({ appt, walk, sched, names }), meta: { v: 3, updated: new Date().toISOString(),
-    counts: { appt: appt.length, walk: walk.length, sched: sched.length }, range: { appt: range(appt), walk: range(walk) } } };
+    counts: { appt: appt.length, walk: walk.length, sched: sched.length }, timed: { appt: appt.filter(r => r.length > 4).length, walk: walk.filter(r => r.length > 4).length }, range: { appt: range(appt), walk: range(walk) } } };
   await st().setJSON('result', out); return out.meta;
 }
 export default async (req) => {
