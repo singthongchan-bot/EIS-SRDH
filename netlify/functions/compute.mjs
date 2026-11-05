@@ -2,14 +2,18 @@ const WD = ['จันทร์','อังคาร','พุธ','พฤหั�
 // 1 รหัสคลินิก (lct) = 1 แถว  |  appt: [vn,lct,date,dct]  walk: [vn,lct,date]  sched: [lct,day,doc,main,sub,quota,is1h]
 export function compute({ appt = [], walk = [], sched = [], names = {} }) {
   const m = new Map();
-  const g = l => { l = +l; if (!m.has(l)) m.set(l, { lct: l, ak: new Set(), wk: new Set(), dates: new Set(), wOnly: 0, doc: new Map(), sd: new Map(), qs: 0, qn: 0 }); return m.get(l); };
+  // แยกรายเดือน (YYYY-MM) และรายวันในสัปดาห์ (0=อาทิตย์) : [นัด, walk-in ที่ไม่ซ้ำ, ชุดวันที่]
+  const tally = (c, d, i) => { const ym = d.slice(0, 7); if (!c.mon.has(ym)) c.mon.set(ym, [0, 0, new Set()]);
+    const mo = c.mon.get(ym); mo[i]++; mo[2].add(d); const w = c.wd[new Date(d + 'T00:00:00Z').getUTCDay()]; if (w) { w[i]++; w[2].add(d); } };
+  const g = l => { l = +l; if (!m.has(l)) m.set(l, { lct: l, ak: new Set(), wk: new Set(), dates: new Set(), wOnly: 0, doc: new Map(), sd: new Map(), qs: 0, qn: 0, mon: new Map(), wd: Array.from({ length: 7 }, () => [0, 0, new Set()]) }); return m.get(l); };
   for (const [vn, lct, d, dct] of appt) {
-    const c = g(lct); c.ak.add(vn + '|' + lct + '|' + d); c.dates.add(d);
+    const c = g(lct), k = vn + '|' + lct + '|' + d; if (c.ak.has(k)) continue;
+    c.ak.add(k); c.dates.add(d); tally(c, d, 0);
     if (dct) { if (!c.doc.has(d)) c.doc.set(d, new Set()); c.doc.get(d).add(dct); }
   }
   for (const [vn, lct, d] of walk) {                 // ตัดซ้ำ: VN + lct + วันที่ ตรงกับไฟล์นัด
     const c = g(lct), k = vn + '|' + lct + '|' + d; if (c.wk.has(k)) continue;
-    c.wk.add(k); c.dates.add(d); if (!c.ak.has(k)) c.wOnly++;
+    c.wk.add(k); c.dates.add(d); if (!c.ak.has(k)) { c.wOnly++; tally(c, d, 1); }
   }
   for (const [lct, day, doc, , , q, is1h] of sched) {
     const c = g(lct);
@@ -21,6 +25,7 @@ export function compute({ appt = [], walk = [], sched = [], names = {} }) {
     name: names[c.lct] || ('คลินิก ' + c.lct), codes: [c.lct], days: c.dates.size, appt: c.ak.size, walkOnly: c.wOnly, walkAll: c.wk.size,
     rooms: Math.round((mean([...c.doc.values()].map(s => s.size)) || 1) * 100) / 100,
     schedDocs: c.sd.size ? Math.round(mean([...c.sd.values()].map(s => s.size)) * 10) / 10 : null,
-    quota: c.qn ? Math.round(c.qs / c.qn * 10) / 10 : null }))
+    quota: c.qn ? Math.round(c.qs / c.qn * 10) / 10 : null,
+    months: Object.fromEntries([...c.mon].sort().map(([k, v]) => [k, [v[0], v[1], v[2].size]])), wdays: c.wd.map(v => [v[0], v[1], v[2].size]) }))
     .sort((a, b) => (b.appt + b.walkOnly) / b.days - (a.appt + a.walkOnly) / a.days);
 }
