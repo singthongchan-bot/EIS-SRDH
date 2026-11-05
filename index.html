@@ -39,7 +39,7 @@ td{background:var(--card)}tfoot td{background:var(--pl)}.vs{overflow:auto}
 #t th:nth-child(-n+2),#t2 th:first-child{z-index:5}
 #t tfoot td{position:sticky;bottom:0;z-index:2;border-top:2px solid var(--p)}#t tfoot td:nth-child(-n+2){z-index:4}
 
-:root{--chl:#2b7bd9;--cg:#c5cad1;--ctg:#d64545;--cok:#1aa34a;--cmid:#f2b21b;--cbad:#d33b3b;--cwi:#ee6a35;--cbg:#fff;--cline:#e6e9ee}
+:root{--s1:#2b7bd9;--s2:#ee6a35;--s3:#1aa37a;--s4:#4b3aa8;--chl:#2b7bd9;--cg:#c5cad1;--ctg:#d64545;--cok:#1aa34a;--cmid:#f2b21b;--cbad:#d33b3b;--cwi:#ee6a35;--cbg:#fff;--cline:#e6e9ee}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--chl:#5aa2f0;--cg:#565d69;--ctg:#ff7a7a;--cok:#3cc46b;--cmid:#f5c242;--cbad:#ff6b6b;--cwi:#ff8a5c;--cline:#352a47}}
 :root[data-theme="dark"]{--chl:#5aa2f0;--cg:#565d69;--ctg:#ff7a7a;--cok:#3cc46b;--cmid:#f5c242;--cbad:#ff6b6b;--cwi:#ff8a5c;--cline:#352a47}
 .sec{margin:26px 0 12px}.st{margin:0;font-size:21px;color:var(--tx)}.sd{margin:4px 0 0;color:var(--mut);font-size:13.5px}.sd a{color:var(--chl)}
@@ -71,6 +71,17 @@ table.ct tr.hl td{background:color-mix(in srgb,var(--chl) 12%,transparent);font-
 <section class="card"><h3>ผลตามวันในสัปดาห์</h3><p class="cs">แท่งบนคือสัดส่วนผู้ป่วยของแต่ละวัน · แท่งล่างคือผู้ป่วยเฉลี่ยต่อวัน เทียบกับค่าเฉลี่ยทุกวัน</p><div class="cv" style="height:150px"><canvas id="c4a"></canvas></div><div class="cv" style="height:170px"><canvas id="c4b"></canvas></div>
 <div class="lg"><span><i style="background:var(--cg)"></i>สัดส่วนผู้ป่วยในวันนั้น</span><span><i style="background:var(--cok)"></i>ต่ำกว่าเฉลี่ย &gt;10%</span><span><i style="background:var(--cmid)"></i>ใกล้เคียงเฉลี่ย ±10%</span><span><i style="background:var(--cbad)"></i>สูงกว่าเฉลี่ย &gt;10%</span></div></section>
 </div>
+<div class="sec"><h2 class="st">เวลาที่ผู้ป่วยใช้ในแต่ละขั้นตอน</h2><p class="sd">ผู้ป่วยนัด + Walk-in รวมกัน (ตัดรายการซ้ำ) · ค่าเฉลี่ย (นาที) ต่อขั้นตอน · แท่งรวมคือเส้นทางทั้งหมดตั้งแต่ส่งตรวจจนรับยา · ไม่นับช่วงที่เวลาว่างหรือผิดปกติ (ติดลบหรือเกิน 10 ชม.)</p></div>
+<div class="g2">
+<section class="card"><h3>แยกตามเดือน</h3><p class="cs" id="c7s"></p><div class="cv" id="c7w" style="height:300px"><canvas id="c7"></canvas></div><div class="lg" id="stLg"></div></section>
+<section class="card"><h3>แยกตามคลินิก — 15 คลินิกผู้ป่วยมากสุด</h3><p class="cs">เรียงตามเส้นทางรวมจากมากไปน้อย</p><div class="cv" style="height:520px"><canvas id="c8"></canvas></div></section>
+</div>
+<div class="sec"><h2 class="st">รายละเอียดแพทย์แต่ละคน</h2><p class="sd"><b>วิเคราะห์จากข้อมูลเฉพาะผู้ป่วยนัดเท่านั้น</b> (ไฟล์ Walk-in ไม่มีรหัสแพทย์) · แสดงเป็นรหัสแพทย์ (dct) · เวลาตรวจ = พบแพทย์ → ตรวจเสร็จ</p></div>
+<div class="g2">
+<section class="card"><h3>จำนวนผู้ป่วยนัดต่อวันออกตรวจ — 20 แพทย์ผู้ป่วยมากสุด</h3><p class="cs">ตัวเลขท้ายแท่งคือผู้ป่วยต่อวัน · เส้นประคือค่าเฉลี่ยของแพทย์ทั้งหมดที่แสดง</p><div class="cv" style="height:560px"><canvas id="c9"></canvas></div></section>
+<section class="card"><h3>เวลาตรวจเฉลี่ยต่อผู้ป่วย — แพทย์ชุดเดียวกัน</h3><p class="cs">นาทีต่อราย · สีแดง = นานกว่าค่าเฉลี่ยเกิน 20% · สีเขียว = สั้นกว่าค่าเฉลี่ยเกิน 20%</p><div class="cv" style="height:560px"><canvas id="c10"></canvas></div></section>
+</div>
+<section class="card"><h3>ตารางแพทย์ทั้งหมด <span class="m" id="drCnt" style="font-weight:400"></span></h3><p class="cs">หมายเหตุ: วิเคราะห์จากข้อมูลเฉพาะผู้ป่วยนัดเท่านั้น · คลิกหัวตารางเพื่อจัดเรียง · วันออกตรวจนับแยกตามคลินิก</p><div class="tw vs" style="max-height:520px"><table class="ct" id="drT"><thead></thead><tbody></tbody></table></div></section>
 <div class="sec" id="cmpSec"><h2 class="st">เปรียบเทียบเวลารอพบแพทย์ระหว่างโรงพยาบาล</h2><p class="sd">ข้อมูลจาก <a id="cmpSrc" target="_blank" rel="noopener">Looker Studio – ระยะเวลารอคอย</a> <span id="cmpUpd"></span> · คลิกหัวตารางเพื่อจัดเรียง · แถวไฮไลต์คือโรงพยาบาลที่เลือก</p>
 <div class="cbar"><label>โรงพยาบาล <select id="hSel"></select></label><div class="chips" id="pSel"></div></div></div>
 <div class="tiles" id="tiles"></div>
@@ -121,7 +132,7 @@ $('t').tBodies[0].innerHTML=tr.map((r,i)=>`<tr><td>${i+1}</td><td><b style="colo
 $('t').tFoot.innerHTML=`<tr><td></td><td>รวม</td><td>${F(avg)}</td><td>${rooms}</td><td>${F(avg/rooms)}</td><td class="c">${Math.round(appt/avg*100)} / ${100-Math.round(appt/avg*100)}</td><td>${F(appt)}</td><td>${F(walk)}</td><td>${Math.ceil(appt/rooms/HRS)}</td><td>${Math.round(walk/HRS/rooms)}</td><td>${F(nw)}</td><td>${diff>0?'+':''}${F(diff)}</td></tr>`;
 $('cnt').textContent=`แสดง ${rows.length} จาก ${RAW.length} คลินิก`;
 $('t2').tBodies[0].innerHTML=rows.map(r=>`<tr><td style="text-align:left">${r.name}</td><td>${r.rooms}</td><td>${r.schedDocs??'–'}</td><td>${r.quota??'–'}</td><td>${r.ah}</td></tr>`).join('');
-drawOwn(rows)}
+drawOwn(rows);drawSteps(rows);drawDocs(rows)}
 // ---------- กราฟ (รูปแบบเดียวกับ Dashboard เวลารอคอย) ----------
 const TM=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'],TD=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
 const ymTH=k=>{const[y,m]=k.split('-');return TM[+m-1]+' '+String(+y+543).slice(-2)};
@@ -161,6 +172,41 @@ draw('c4a',{type:'bar',data:{labels:lb,datasets:[{data:ix.map(i=>Math.round(wd[i
 options:{layout:{padding:{top:18}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw+'% ของผู้ป่วยทั้งหมด'}}},scales:{x:{display:false},y:{display:false,beginAtZero:true}}}});
 draw('c4b',{type:'bar',data:{labels:lb,datasets:[{data:per,backgroundColor:per.map(col),borderRadius:3,barPercentage:.55,fmt:F}]},
 options:{layout:{padding:{top:18}},plugins:{legend:{display:false},deco:{target:{axis:'y',value:mean||null,text:'เฉลี่ย '+F(mean)}},tooltip:{callbacks:{label:c=>' '+F(c.raw)+' ราย/วัน · '+wd[ix[c.dataIndex]].d+' วัน'}}},scales:{x:{grid:{display:false}},y:{display:false,beginAtZero:true}}}})}
+// ---------- เวลาแต่ละขั้นตอน + รายแพทย์ ----------
+const STEP=[['ส่งตรวจ → ซักประวัติ','--s1'],['ซักประวัติ → พบแพทย์','--s2'],['พบแพทย์ → ตรวจเสร็จ','--s3'],['ตรวจเสร็จ → รับยา','--s4']];
+const addA=(a,b)=>{for(let i=0;i<8;i++)a[i]+=b[i]||0;return a},stM=a=>[0,1,2,3].map(i=>a[i*2+1]?Math.round(a[i*2]/a[i*2+1]):null);
+function stepChart(id,labels,mat,cnt,fmtL){const tx=css('--tx');const tot=mat.map(r=>r.some(v=>v!=null)?r.reduce((s,v)=>s+(v||0),0):null);
+draw(id,{type:'bar',data:{labels,datasets:STEP.map(([l,c],si)=>({label:l,data:mat.map(r=>r[si]),backgroundColor:css(c),inside:1,borderSkipped:false,borderRadius:3,barPercentage:.7,borderColor:css('--card'),borderWidth:{right:2},...(si==3?{end:i=>tot[i]==null?null:tot[i],endColor:()=>tx}:{})}))},
+options:{indexAxis:'y',layout:{padding:{right:40}},plugins:{legend:{display:false},tooltip:{mode:'index',callbacks:{label:c=>' '+c.dataset.label+': '+(c.raw??'–')+' นาที',footer:it=>'รวม '+(tot[it[0].dataIndex]??'–')+' นาที · '+F(cnt[it[0].dataIndex])+' ราย'}}},
+scales:{x:{stacked:true,beginAtZero:true,grid:{display:false},ticks:{display:false},title:{display:true,text:'นาที (สะสมตลอดเส้นทางผู้ป่วย)',color:css('--mut')}},y:{stacked:true,grid:{display:false},ticks:{color:tx}}}}})}
+function drawSteps(rows){$('stLg').innerHTML=STEP.map(([l,c])=>`<span><i style="background:var(${c})"></i>${l}</span>`).join('');
+const mo={};rows.forEach(r=>Object.entries(r.steps||{}).forEach(([k,a])=>addA(mo[k]||(mo[k]=Array(8).fill(0)),a)));
+const mk=Object.keys(mo).sort();$('c7w').style.height=Math.max(160,mk.length*58+70)+'px';
+stepChart('c7',mk.map(ymTH),mk.map(k=>stM(mo[k])),mk.map(k=>Math.max(...[1,3,5,7].map(i=>mo[k][i]))));
+$('c7s').textContent=mk.length?'ช่วงข้อมูล '+ymTH(mk[0])+(mk.length>1?' – '+ymTH(mk[mk.length-1]):''):'ยังไม่มีข้อมูลเวลา – นำเข้าไฟล์นัด/Walk-in ใหม่ที่หน้า /admin เพื่อเติมเวลาแต่ละขั้นตอน';
+const cl=rows.map(r=>{const a=Object.values(r.steps||{}).reduce(addA,Array(8).fill(0));return{n:r.name,m:stM(a),c:Math.max(...[1,3,5,7].map(i=>a[i])),v:r.appt+r.walk}}).filter(x=>x.c).sort((a,b)=>b.v-a.v).slice(0,15)
+.sort((a,b)=>b.m.reduce((s,v)=>s+(v||0),0)-a.m.reduce((s,v)=>s+(v||0),0));
+stepChart('c8',cl.map(x=>x.n),cl.map(x=>x.m),cl.map(x=>x.c))}
+let dK='n',dD=-1;
+function drawDocs(rows){const M=new Map();rows.forEach(r=>Object.entries(r.docs||{}).forEach(([k,[n,d,e,en,w,wn]])=>{const o=M.get(k)||{k,n:0,d:0,e:0,en:0,w:0,wn:0,top:null,tn:0};
+o.n+=n;o.d+=d;o.e+=e;o.en+=en;o.w+=w;o.wn+=wn;if(n>o.tn){o.tn=n;o.top=r.name}const cl=o.cl||(o.cl=new Set());cl.add(r.name);M.set(k,o)}));
+const D=[...M.values()].map(o=>({...o,pd:o.d?Math.round(o.n/o.d*10)/10:0,ex:o.en?Math.round(o.e/o.en*10)/10:null,wt:o.wn?Math.round(o.w/o.wn*10)/10:null,nc:o.cl.size}));
+D.forEach(o=>o.hr=o.ex!=null?Math.round(o.pd*o.ex/60*10)/10:null);
+const top=D.slice().sort((a,b)=>b.n-a.n).slice(0,20),hl=css('--chl'),gy=css('--cg'),tx=css('--tx'),lab=top.map(o=>o.k+' · '+o.top);
+const mpd=top.length?top.reduce((s,o)=>s+o.pd,0)/top.length:null,ve=top.filter(o=>o.ex!=null),mex=ve.length?ve.reduce((s,o)=>s+o.ex,0)/ve.length:null;
+draw('c9',{type:'bar',data:{labels:lab,datasets:[{data:top.map(o=>o.pd),backgroundColor:top.map(o=>o.pd>mpd?hl:gy),borderRadius:4,barPercentage:.72,fmt:v=>v,endColor:i=>top[i].pd>mpd?hl:css('--mut')}]},
+options:{indexAxis:'y',layout:{padding:{right:36,bottom:20}},plugins:{legend:{display:false},deco:{target:{axis:'x',value:mpd,text:mpd?'เฉลี่ย '+r1(mpd)+' ราย/วัน':''}},tooltip:{callbacks:{label:c=>{const o=top[c.dataIndex];return[' '+o.pd+' ราย/วัน',' รวม '+F(o.n)+' ราย · '+o.d+' วันออกตรวจ']}}}},
+scales:{x:{beginAtZero:true,grid:{display:false},ticks:{display:false}},y:{grid:{display:false},ticks:{color:tx,font:{size:11}}}}}});
+const ec=v=>v==null?gy:v>mex*1.2?css('--cbad'):v<mex*.8?css('--cok'):gy;
+draw('c10',{type:'bar',data:{labels:lab,datasets:[{data:top.map(o=>o.ex),backgroundColor:top.map(o=>ec(o.ex)),borderRadius:4,barPercentage:.72,fmt:r1,endColor:i=>css('--mut')}]},
+options:{indexAxis:'y',layout:{padding:{right:40,bottom:20}},plugins:{legend:{display:false},deco:{target:{axis:'x',value:mex,text:mex?'เฉลี่ย '+r1(mex)+' นาที':''}},tooltip:{callbacks:{label:c=>{const o=top[c.dataIndex];return[' ตรวจเฉลี่ย '+r1(o.ex)+' นาที/ราย ('+F(o.en)+' รายที่มีเวลา)',' รอพบแพทย์เฉลี่ย '+r1(o.wt)+' นาที',' เวลาตรวจรวม ≈ '+r1(o.hr)+' ชม./วัน']}}}},
+scales:{x:{beginAtZero:true,grid:{display:false},ticks:{display:false}},y:{grid:{display:false},ticks:{color:tx,font:{size:11}}}}}});
+const C=[['k','รหัสแพทย์'],['top','คลินิกหลัก'],['nc','จำนวนคลินิก'],['n','ผู้ป่วยนัด (ราย)'],['d','วันออกตรวจ'],['pd','ผู้ป่วย/วัน'],['ex','เวลาตรวจเฉลี่ย (นาที/ราย)'],['wt','รอพบแพทย์เฉลี่ย (นาที)'],['hr','เวลาตรวจรวม (ชม./วัน)']];
+const tr=D.sort((a,b)=>{const x=a[dK],y=b[dK];return(x==null)-(y==null)||(x>y?1:x<y?-1:0)*dD}),mxe=Math.max(1,...D.map(o=>o.ex||0));
+$('drT').tHead.innerHTML='<tr>'+C.map(c=>`<th data-k="${c[0]}" style="cursor:pointer;position:sticky;top:0;background:var(--card)">${c[1]}${dK==c[0]?(dD>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>';
+$('drT').tHead.querySelectorAll('th').forEach(h=>h.onclick=()=>{dD=dK==h.dataset.k?-dD:-1;dK=h.dataset.k;drawDocs(rows)});
+$('drT').tBodies[0].innerHTML=tr.map(o=>`<tr><td><b>${o.k}</b></td><td style="text-align:left">${o.top}</td><td>${o.nc}</td><td>${F(o.n)}</td><td>${o.d}</td><td>${o.pd}</td><td><div class="ib"><i style="width:${Math.round((o.ex||0)/mxe*90)}px;background:${ec(o.ex)};opacity:.7"></i>${r1(o.ex)}</div></td><td>${r1(o.wt)}</td><td>${r1(o.hr)}</td></tr>`).join('');
+$('drCnt').textContent='· '+D.length+' คน'}
 // ---------- เปรียบเทียบโรงพยาบาล ----------
 let CMP=null,cH='รพ.สิรินธร',cP=null,cK='mean',cD=1;const TGT=60;
 const pill=(v,good,bad)=>`<span class="pill ${v>=good?'g':v>=bad?'y':'r'}">${r1(v)}%</span>`;

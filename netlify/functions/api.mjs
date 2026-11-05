@@ -10,7 +10,7 @@ const range = a => { const d = a.map(r => r[2]).filter(Boolean).sort(); return d
 async function rebuild() {
   const [appt, walk, sched] = await Promise.all([load('appt'), load('walk'), load('sched')]);
   const names = (await st().get('names', { type: 'json' })) || {};
-  const out = { rows: compute({ appt, walk, sched, names }), meta: { v: 2, updated: new Date().toISOString(),
+  const out = { rows: compute({ appt, walk, sched, names }), meta: { v: 3, updated: new Date().toISOString(),
     counts: { appt: appt.length, walk: walk.length, sched: sched.length }, range: { appt: range(appt), walk: range(walk) } } };
   await st().setJSON('result', out); return out.meta;
 }
@@ -18,7 +18,7 @@ export default async (req) => {
   const p = new URL(req.url).pathname.replace(/^\/api\/?/, '');
   if (req.method === 'GET' && p === 'data') {
     let res = await st().get('result', { type: 'json' });
-    if (res && res.rows?.length && res.meta?.v !== 2) { await rebuild(); res = await st().get('result', { type: 'json' }); } // ผลเก่ายังไม่มีข้อมูลรายเดือน/รายวัน
+    if (res && res.rows?.length && res.meta?.v !== 3) { await rebuild(); res = await st().get('result', { type: 'json' }); } // ผลเก่ายังไม่มีข้อมูลรายเดือน/รายวัน
     return J(res || { rows: [], meta: { counts: { appt: 0, walk: 0, sched: 0 } } });
   }
   if (req.method === 'GET' && p === 'compare') return J({ ...(await loadCompare()), sourceUrl: SOURCE_URL });
@@ -55,10 +55,12 @@ export default async (req) => {
       for (const k in names) if (!(kind === 'sched' && cn[k])) cn[k] = names[k];
       await st().setJSON('names', cn);
     }
-    const cur = await load(kind), seen = new Set(cur.map(KEY[kind])); let added = 0;
-    for (const r of records) { const k = KEY[kind](r); if (!seen.has(k)) { seen.add(k); cur.push(r); added++; } }
+    const cur = await load(kind), pos = new Map(cur.map((r, i) => [KEY[kind](r), i])); let added = 0, updated = 0;
+    for (const r of records) { const k = KEY[kind](r), i = pos.get(k);
+      if (i === undefined) { pos.set(k, cur.length); cur.push(r); added++; }
+      else if (kind !== 'sched' && r.length > cur[i].length) { cur[i] = r; updated++; } } // เติมข้อมูลเวลาให้รายการเดิม
     await st().setJSON(kind, cur);
-    return J({ ok: true, added, total: cur.length, meta: done ? await rebuild() : undefined });
+    return J({ ok: true, added, updated, total: cur.length, meta: done ? await rebuild() : undefined });
   }
   return J({ error: 'not found' }, 404);
 };
