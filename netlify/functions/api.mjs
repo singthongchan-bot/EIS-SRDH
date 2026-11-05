@@ -18,9 +18,11 @@ export default async (req) => {
   const p = new URL(req.url).pathname.replace(/^\/api\/?/, '');
   if (req.method === 'GET' && p === 'data') {
     let res = await st().get('result', { type: 'json' });
-    if (res && res.rows?.length && res.meta?.v !== 4) { await rebuild(); res = await st().get('result', { type: 'json' }); } // ผลเก่ายังไม่มีข้อมูลรายเดือนของแพทย์/ชื่อแพทย์
-    return J(res || { rows: [], meta: { counts: { appt: 0, walk: 0, sched: 0 } } });
+    if (res && res.rows?.length && !(res.meta?.v >= 4)) { try { await rebuild(); res = await st().get('result', { type: 'json' }); } catch {} } // ผลเก่ายังไม่มีข้อมูลรายเดือนของแพทย์
+    if (res) res.docNames = (await st().get('docnames', { type: 'json' })) || {}; // ชื่อแพทย์อ่านตรงจากที่เก็บเสมอ ไม่ขึ้นกับผลคำนวณ
+    return J(res || { rows: [], docNames: {}, meta: { counts: { appt: 0, walk: 0, sched: 0 } } });
   }
+  if (req.method === 'GET' && p === 'docnames') return J((await st().get('docnames', { type: 'json' })) || {});
   if (req.method === 'GET' && p === 'compare') return J({ ...(await loadCompare()), sourceUrl: SOURCE_URL });
   if (!p.startsWith('admin/')) return J({ error: 'not found' }, 404);
   const pw = Netlify.env.get('ADMIN_PASSWORD');
