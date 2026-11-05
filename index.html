@@ -55,6 +55,8 @@ td{background:var(--card)}tfoot td{background:var(--pl)}.vs{overflow:auto}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill.g{background:#17361f;color:#7fdc9a}:root:not([data-theme="light"]) .pill.y{background:#3a2f12;color:#f5c242}:root:not([data-theme="light"]) .pill.r{background:#3d1a1a;color:#ff9b9b}}
 table.ct{min-width:860px;border-spacing:0}table.ct th{background:transparent;color:var(--mut);font-weight:600;border-bottom:1px solid var(--bd);font-size:12.5px;text-align:right;padding:10px}table.ct th:first-child{text-align:left}
 table.ct td{padding:10px;border-bottom:1px solid var(--cline);text-align:right;background:transparent}table.ct td:first-child{text-align:left}
+#drT tbody tr{cursor:pointer}.dq{font:inherit;padding:7px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);min-width:240px}.dph{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:flex-start}
+@media print{header,main>*:not(#dpC),#dpC .np{display:none!important}#dpC{border:0}#dpC .g2{grid-template-columns:1fr 1fr}}
 table.ct tr.hl td{background:color-mix(in srgb,var(--chl) 12%,transparent);font-weight:700}table.ct tr.hl td:first-child{box-shadow:inset 3px 0 0 var(--chl)}
 .ib{display:flex;align-items:center;gap:8px;justify-content:flex-end}.ib i{display:block;height:18px;border-radius:3px;background:var(--cg);opacity:.55}tr.hl .ib i{background:var(--chl);opacity:.6}
 </style></head><body>
@@ -76,12 +78,17 @@ table.ct tr.hl td{background:color-mix(in srgb,var(--chl) 12%,transparent);font-
 <section class="card"><h3>แยกตามเดือน</h3><p class="cs" id="c7s"></p><div class="cv" id="c7w" style="height:300px"><canvas id="c7"></canvas></div><div class="lg" id="stLg"></div></section>
 <section class="card"><h3>แยกตามคลินิก — 15 คลินิกผู้ป่วยมากสุด</h3><p class="cs">เรียงตามเส้นทางรวมจากมากไปน้อย</p><div class="cv" style="height:520px"><canvas id="c8"></canvas></div></section>
 </div>
-<div class="sec"><h2 class="st">รายละเอียดแพทย์แต่ละคน</h2><p class="sd"><b>วิเคราะห์จากข้อมูลเฉพาะผู้ป่วยนัดเท่านั้น</b> (ไฟล์ Walk-in ไม่มีรหัสแพทย์) · แสดงเป็นรหัสแพทย์ (dct) · เวลาตรวจ = พบแพทย์ → ตรวจเสร็จ</p></div>
+<div class="sec"><h2 class="st">รายละเอียดแพทย์แต่ละคน</h2><p class="sd"><b>วิเคราะห์จากข้อมูลเฉพาะผู้ป่วยนัดเท่านั้น</b> (ไฟล์ Walk-in ไม่มีรหัสแพทย์) · รหัสแพทย์จากไฟล์นัด คอลัมน์ AA · ชื่อแพทย์คอลัมน์ AB (ถ้ายังไม่มีชื่อจะแสดงรหัสแพทย์) · เวลาตรวจ = พบแพทย์ → ตรวจเสร็จ</p></div>
 <div class="g2">
 <section class="card"><h3>จำนวนผู้ป่วยนัดต่อวันออกตรวจ — 20 แพทย์ผู้ป่วยมากสุด</h3><p class="cs">ตัวเลขท้ายแท่งคือผู้ป่วยต่อวัน · เส้นประคือค่าเฉลี่ยของแพทย์ทั้งหมดที่แสดง</p><div class="cv" style="height:560px"><canvas id="c9"></canvas></div></section>
 <section class="card"><h3>เวลาตรวจเฉลี่ยต่อผู้ป่วย — แพทย์ชุดเดียวกัน</h3><p class="cs">นาทีต่อราย · สีแดง = นานกว่าค่าเฉลี่ยเกิน 20% · สีเขียว = สั้นกว่าค่าเฉลี่ยเกิน 20%</p><div class="cv" style="height:560px"><canvas id="c10"></canvas></div></section>
 </div>
-<section class="card"><h3>ตารางแพทย์ทั้งหมด <span class="m" id="drCnt" style="font-weight:400"></span></h3><p class="cs">หมายเหตุ: วิเคราะห์จากข้อมูลเฉพาะผู้ป่วยนัดเท่านั้น · คลิกหัวตารางเพื่อจัดเรียง · วันออกตรวจนับแยกตามคลินิก</p><div class="tw vs" style="max-height:520px"><table class="ct" id="drT"><thead></thead><tbody></tbody></table></div></section>
+<section class="card"><h3>ตารางแพทย์ทั้งหมด <span class="m" id="drCnt" style="font-weight:400"></span></h3><p class="cs">หมายเหตุ: วิเคราะห์จากข้อมูลเฉพาะผู้ป่วยนัดเท่านั้น · คลิกหัวตารางเพื่อจัดเรียง · <b>คลิกแถวเพื่อดูรายละเอียดแพทย์คนนั้น</b> · วันออกตรวจนับแยกตามคลินิก</p><div class="cbar" style="margin:0 0 10px"><input id="dq" class="dq" placeholder="ค้นหาชื่อหรือรหัสแพทย์" oninput="drawDocs(LROWS)"><label>เลือกแพทย์<select id="dpS2" onchange="dSel=this.value;drawDoc(true)"></select></label><button class="chip" onclick="docCSV()">ดาวน์โหลด CSV</button></div><div class="tw vs" style="max-height:520px"><table class="ct" id="drT"><thead></thead><tbody></tbody></table></div></section>
+<section class="card" id="dpC"><div class="dph"><div><h3>รายละเอียดแพทย์รายคน</h3><p class="cs" id="dpN" style="margin-bottom:0"></p></div><div class="cbar" style="margin:0"><label>แพทย์<select id="dpS" onchange="dSel=this.value;drawDoc()"></select></label><button class="chip np" onclick="window.print()">พิมพ์ / บันทึก PDF</button></div></div>
+<div class="tiles" id="dpT" style="margin-top:14px"></div>
+<div class="g2"><section class="card"><h3>แนวโน้มรายเดือน</h3><p class="cs">แท่ง = ผู้ป่วยนัดต่อวันออกตรวจ · เส้น = เวลาตรวจเฉลี่ย (นาที/ราย)</p><div class="cv" style="height:300px"><canvas id="c11"></canvas></div></section>
+<section class="card"><h3>การกระจายเวลาตรวจต่อราย</h3><p class="cs">% ของผู้ป่วยที่มีข้อมูลเวลา · เทียบกับแพทย์ทั้งหมดในคลินิกที่เลือก</p><div class="cv" style="height:300px"><canvas id="c12"></canvas></div></section></div>
+<h3 style="margin:4px 0 8px;font-size:14.5px">แยกตามคลินิกที่ออกตรวจ</h3><div class="tw"><table class="ct" id="dpCl"><thead><tr><th>คลินิก</th><th>ผู้ป่วยนัด (ราย)</th><th>วันออกตรวจ</th><th>ผู้ป่วย/วัน</th><th>เวลาตรวจเฉลี่ย (นาที/ราย)</th><th>รอพบแพทย์เฉลี่ย (นาที)</th></tr></thead><tbody></tbody></table></div></section>
 <div class="sec" id="cmpSec"><h2 class="st">เปรียบเทียบเวลารอพบแพทย์ระหว่างโรงพยาบาล</h2><p class="sd">ข้อมูลจาก <a id="cmpSrc" target="_blank" rel="noopener">Looker Studio – ระยะเวลารอคอย</a> <span id="cmpUpd"></span> · คลิกหัวตารางเพื่อจัดเรียง · แถวไฮไลต์คือโรงพยาบาลที่เลือก</p>
 <div class="cbar"><label>โรงพยาบาล <select id="hSel"></select></label><div class="chips" id="pSel"></div></div></div>
 <div class="tiles" id="tiles"></div>
@@ -189,26 +196,60 @@ $('c7s').textContent=mk.length?'ช่วงข้อมูล '+ymTH(mk[0])+(mk
 const cl=rows.map(r=>{const a=Object.values(r.steps||{}).reduce(addA,Array(8).fill(0));return{n:r.name,m:stM(a),c:Math.max(...[1,3,5,7].map(i=>a[i])),v:r.appt+r.walk}}).filter(x=>x.c).sort((a,b)=>b.v-a.v).slice(0,15)
 .sort((a,b)=>b.m.reduce((s,v)=>s+(v||0),0)-a.m.reduce((s,v)=>s+(v||0),0));
 empty('c8',!cl.length);stepChart('c8',cl.map(x=>x.n),cl.map(x=>x.m),cl.map(x=>x.c))}
-let dK='n',dD=-1;
-function drawDocs(rows){const M=new Map();rows.forEach(r=>Object.entries(r.docs||{}).forEach(([k,[n,d,e,en,w,wn]])=>{const o=M.get(k)||{k,n:0,d:0,e:0,en:0,w:0,wn:0,top:null,tn:0};
-o.n+=n;o.d+=d;o.e+=e;o.en+=en;o.w+=w;o.wn+=wn;if(n>o.tn){o.tn=n;o.top=r.name}const cl=o.cl||(o.cl=new Set());cl.add(r.name);M.set(k,o)}));
-const D=[...M.values()].map(o=>({...o,pd:o.d?Math.round(o.n/o.d*10)/10:0,ex:o.en?Math.round(o.e/o.en*10)/10:null,wt:o.wn?Math.round(o.w/o.wn*10)/10:null,nc:o.cl.size}));
-D.forEach(o=>o.hr=o.ex!=null?Math.round(o.pd*o.ex/60*10)/10:null);
-const top=D.slice().sort((a,b)=>b.n-a.n).slice(0,20),hl=css('--chl'),gy=css('--cg'),tx=css('--tx'),lab=top.map(o=>o.k+' · '+o.top);
+let dK='n',dD=-1,DOCN={},LROWS=[],DOCS=[],DAV={},dSel=null;
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dn=k=>DOCN[k]||DOCN[String(k).trim().replace(/^0+(?=\d)/,'')]||DOCN[String(+k)]||k,EBL=['< 5','5–10','10–15','15–20','20–30','≥ 30'];
+const agg=o=>({pd:o.d?Math.round(o.n/o.d*10)/10:0,ex:o.en?Math.round(o.e/o.en*10)/10:null,wt:o.wn?Math.round(o.w/o.wn*10)/10:null});
+function drawDocs(rows){LROWS=rows;const M=new Map();rows.forEach(r=>Object.entries(r.docs||{}).forEach(([k,[n,d,e,en,w,wn,mo,h]])=>{const o=M.get(k)||{k,nm:dn(k),n:0,d:0,e:0,en:0,w:0,wn:0,top:null,tn:0,cls:[],mo:{},h:Array(6).fill(0)};
+o.n+=n;o.d+=d;o.e+=e;o.en+=en;o.w+=w;o.wn+=wn;if(n>o.tn){o.tn=n;o.top=r.name}o.cls.push({name:r.name,n,d,e,en,w,wn});
+Object.entries(mo||{}).forEach(([m,v])=>{const a=o.mo[m]||(o.mo[m]=[0,0,0,0,0,0]);v.forEach((x,i)=>a[i]+=x)});(h||[]).forEach((x,i)=>o.h[i]+=x);M.set(k,o)}));
+const D=[...M.values()].map(o=>({...o,...agg(o),nc:o.cls.length}));
+D.forEach(o=>o.hr=o.ex!=null?Math.round(o.pd*o.ex/60*10)/10:null);DOCS=D;
+const T=D.reduce((a,o)=>{['n','d','e','en','w','wn'].forEach(k=>a[k]+=o[k]);o.h.forEach((x,i)=>a.h[i]+=x);return a},{n:0,d:0,e:0,en:0,w:0,wn:0,h:Array(6).fill(0)});DAV={...T,...agg(T)};
+const top=D.slice().sort((a,b)=>b.n-a.n).slice(0,20),hl=css('--chl'),gy=css('--cg'),tx=css('--tx'),lab=top.map(o=>(o.nm.length>26?o.nm.slice(0,25)+'…':o.nm)+' · '+o.top);
 const mpd=top.length?top.reduce((s,o)=>s+o.pd,0)/top.length:null,ve=top.filter(o=>o.ex!=null),mex=ve.length?ve.reduce((s,o)=>s+o.ex,0)/ve.length:null;
+const pick=(e,el)=>{if(el[0]){dSel=top[el[0].index].k;drawDoc(true)}};
 draw('c9',{type:'bar',data:{labels:lab,datasets:[{data:top.map(o=>o.pd),backgroundColor:top.map(o=>o.pd>mpd?hl:gy),borderRadius:4,barPercentage:.72,fmt:v=>v,endColor:i=>top[i].pd>mpd?hl:css('--mut')}]},
-options:{indexAxis:'y',layout:{padding:{right:36,bottom:20}},plugins:{legend:{display:false},deco:{target:{axis:'x',value:mpd,text:mpd?'เฉลี่ย '+r1(mpd)+' ราย/วัน':''}},tooltip:{callbacks:{label:c=>{const o=top[c.dataIndex];return[' '+o.pd+' ราย/วัน',' รวม '+F(o.n)+' ราย · '+o.d+' วันออกตรวจ']}}}},
+options:{onClick:pick,indexAxis:'y',layout:{padding:{right:36,bottom:20}},plugins:{legend:{display:false},deco:{target:{axis:'x',value:mpd,text:mpd?'เฉลี่ย '+r1(mpd)+' ราย/วัน':''}},tooltip:{callbacks:{title:it=>top[it[0].dataIndex].nm+' ('+top[it[0].dataIndex].k+')',label:c=>{const o=top[c.dataIndex];return[' '+o.pd+' ราย/วัน',' รวม '+F(o.n)+' ราย · '+o.d+' วันออกตรวจ']}}}},
 scales:{x:{beginAtZero:true,grid:{display:false},ticks:{display:false}},y:{grid:{display:false},ticks:{color:tx,font:{size:11}}}}}});
 empty('c10',!ve.length);const ec=v=>v==null?gy:v>mex*1.2?css('--cbad'):v<mex*.8?css('--cok'):gy;
 draw('c10',{type:'bar',data:{labels:lab,datasets:[{data:top.map(o=>o.ex),backgroundColor:top.map(o=>ec(o.ex)),borderRadius:4,barPercentage:.72,fmt:r1,endColor:i=>css('--mut')}]},
-options:{indexAxis:'y',layout:{padding:{right:40,bottom:20}},plugins:{legend:{display:false},deco:{target:{axis:'x',value:mex,text:mex?'เฉลี่ย '+r1(mex)+' นาที':''}},tooltip:{callbacks:{label:c=>{const o=top[c.dataIndex];return[' ตรวจเฉลี่ย '+r1(o.ex)+' นาที/ราย ('+F(o.en)+' รายที่มีเวลา)',' รอพบแพทย์เฉลี่ย '+r1(o.wt)+' นาที',' เวลาตรวจรวม ≈ '+r1(o.hr)+' ชม./วัน']}}}},
+options:{onClick:pick,indexAxis:'y',layout:{padding:{right:40,bottom:20}},plugins:{legend:{display:false},deco:{target:{axis:'x',value:mex,text:mex?'เฉลี่ย '+r1(mex)+' นาที':''}},tooltip:{callbacks:{title:it=>top[it[0].dataIndex].nm+' ('+top[it[0].dataIndex].k+')',label:c=>{const o=top[c.dataIndex];return[' ตรวจเฉลี่ย '+r1(o.ex)+' นาที/ราย ('+F(o.en)+' รายที่มีเวลา)',' รอพบแพทย์เฉลี่ย '+r1(o.wt)+' นาที',' เวลาตรวจรวม ≈ '+r1(o.hr)+' ชม./วัน']}}}},
 scales:{x:{beginAtZero:true,grid:{display:false},ticks:{display:false}},y:{grid:{display:false},ticks:{color:tx,font:{size:11}}}}}});
-const C=[['k','รหัสแพทย์'],['top','คลินิกหลัก'],['nc','จำนวนคลินิก'],['n','ผู้ป่วยนัด (ราย)'],['d','วันออกตรวจ'],['pd','ผู้ป่วย/วัน'],['ex','เวลาตรวจเฉลี่ย (นาที/ราย)'],['wt','รอพบแพทย์เฉลี่ย (นาที)'],['hr','เวลาตรวจรวม (ชม./วัน)']];
-const tr=D.sort((a,b)=>{const x=a[dK],y=b[dK];return(x==null)-(y==null)||(x>y?1:x<y?-1:0)*dD}),mxe=Math.max(1,...D.map(o=>o.ex||0));
+const C=DCOLS,q=($('dq').value||'').trim().toLowerCase();
+const tr=D.filter(o=>!q||(o.nm+' '+o.k).toLowerCase().includes(q)).sort((a,b)=>{const x=a[dK],y=b[dK];return(x==null)-(y==null)||(x>y?1:x<y?-1:0)*dD}),mxe=Math.max(1,...D.map(o=>o.ex||0));
 $('drT').tHead.innerHTML='<tr>'+C.map(c=>`<th data-k="${c[0]}" style="cursor:pointer;position:sticky;top:0;background:var(--card)">${c[1]}${dK==c[0]?(dD>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>';
 $('drT').tHead.querySelectorAll('th').forEach(h=>h.onclick=()=>{dD=dK==h.dataset.k?-dD:-1;dK=h.dataset.k;drawDocs(rows)});
-$('drT').tBodies[0].innerHTML=tr.map(o=>`<tr><td><b>${o.k}</b></td><td style="text-align:left">${o.top}</td><td>${o.nc}</td><td>${F(o.n)}</td><td>${o.d}</td><td>${o.pd}</td><td><div class="ib"><i style="width:${Math.round((o.ex||0)/mxe*90)}px;background:${ec(o.ex)};opacity:.7"></i>${r1(o.ex)}</div></td><td>${r1(o.wt)}</td><td>${r1(o.hr)}</td></tr>`).join('');
-$('drCnt').textContent='· '+D.length+' คน'}
+$('drT').tBodies[0].innerHTML=tr.map(o=>`<tr data-k="${esc(o.k)}" class="${o.k==dSel?'hl':''}"><td><b>${esc(o.nm)}</b></td><td>${esc(o.k)}</td><td style="text-align:left">${esc(o.top)}</td><td>${o.nc}</td><td>${F(o.n)}</td><td>${o.d}</td><td>${o.pd}</td><td><div class="ib"><i style="width:${Math.round((o.ex||0)/mxe*90)}px;background:${ec(o.ex)};opacity:.7"></i>${r1(o.ex)}</div></td><td>${r1(o.wt)}</td><td>${r1(o.hr)}</td></tr>`).join('');
+$('drT').tBodies[0].querySelectorAll('tr').forEach(t=>t.onclick=()=>{dSel=t.dataset.k;drawDoc(true)});
+const nn=D.filter(o=>o.nm!=o.k).length;$('drCnt').textContent='· '+D.length+' คน'+(q?' · แสดง '+tr.length:'')+(D.length&&nn<D.length?' · มีชื่อ '+nn+' คน':'');
+const opts=D.slice().sort((a,b)=>a.nm.localeCompare(b.nm,'th'));if(!D.some(o=>o.k==dSel))dSel=D.slice().sort((a,b)=>b.n-a.n)[0]?.k??null;
+$('dpS').innerHTML=$('dpS2').innerHTML=opts.map(o=>`<option value="${esc(o.k)}"${o.k==dSel?' selected':''}>${esc(o.nm)}${o.nm!=o.k?' ('+esc(o.k)+')':''}</option>`).join('');drawDoc()}
+const DCOLS=[['nm','ชื่อแพทย์'],['k','รหัสแพทย์'],['top','คลินิกหลัก'],['nc','จำนวนคลินิก'],['n','ผู้ป่วยนัด (ราย)'],['d','วันออกตรวจ'],['pd','ผู้ป่วย/วัน'],['ex','เวลาตรวจเฉลี่ย (นาที/ราย)'],['wt','รอพบแพทย์เฉลี่ย (นาที)'],['hr','เวลาตรวจรวม (ชม./วัน)']];
+function docCSV(){const q=v=>{v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+const L=[DCOLS.map(c=>c[1]).join(',')].concat(DOCS.slice().sort((a,b)=>b.n-a.n).map(o=>DCOLS.map(c=>q(o[c[0]])).join(',')));
+const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+L.join('\n')],{type:'text/csv;charset=utf-8'}));a.download='doctor-summary.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function drawDoc(scroll){const o=DOCS.find(x=>x.k==dSel);if(!o){$('dpN').textContent='ยังไม่มีข้อมูลแพทย์ในคลินิกที่เลือก';$('dpT').innerHTML='';$('dpCl').tBodies[0].innerHTML='';ch.c11&&ch.c11.destroy();ch.c12&&ch.c12.destroy();return}
+$('dpS').value=$('dpS2').value=o.k;$('drT').tBodies[0].querySelectorAll('tr').forEach(t=>t.classList.toggle('hl',t.dataset.k==o.k));
+const N=DOCS.length,rk=(k,asc)=>{const v=DOCS.filter(x=>x[k]!=null).sort((a,b)=>asc?a[k]-b[k]:b[k]-a[k]);const i=v.findIndex(x=>x.k==o.k);return i<0?'':'อันดับ '+(i+1)+' จาก '+v.length};
+const vs=(v,a,low)=>{if(v==null||!a)return'';const d=(v-a)/a*100,c=!low||Math.abs(d)<=20?'n':d<0?'g':'r';return`<span class="pill ${c}">${d>0?'+':''}${Math.round(d)}%</span>`};
+const ms=Object.keys(o.mo).sort();
+$('dpN').innerHTML=`<b style="color:var(--tx)">${esc(o.nm)}</b> · รหัส ${esc(o.k)} · คลินิกหลัก ${esc(o.top)} · ออกตรวจ ${o.nc} คลินิก${ms.length?' · ช่วงข้อมูล '+ymTH(ms[0])+(ms.length>1?' – '+ymTH(ms[ms.length-1]):''):''} · เทียบกับค่าเฉลี่ยแพทย์ทั้งหมด ${N} คนในคลินิกที่เลือก (เฉพาะผู้ป่วยนัด)`;
+const TL=[['ผู้ป่วยนัดรวม',F(o.n),'ราย',rk('n')],['วันออกตรวจ',F(o.d),'วัน','นับแยกตามคลินิก'],['ผู้ป่วยต่อวันออกตรวจ',o.pd,'ราย/วัน',vs(o.pd,DAV.pd)+'เฉลี่ย '+r1(DAV.pd)+' · '+rk('pd')],
+['เวลาตรวจเฉลี่ย',r1(o.ex),'นาที/ราย',o.ex!=null?vs(o.ex,DAV.ex,1)+'เฉลี่ย '+r1(DAV.ex)+' · จาก '+F(o.en)+' รายที่มีเวลา':'ยังไม่มีข้อมูลเวลา'],
+['รอพบแพทย์เฉลี่ย',r1(o.wt),'นาที',o.wt!=null?vs(o.wt,DAV.wt,1)+'เฉลี่ย '+r1(DAV.wt)+' · ซักประวัติ → พบแพทย์':'ยังไม่มีข้อมูลเวลา'],
+['เวลาตรวจรวมต่อวัน',r1(o.hr),'ชม./วัน','ผู้ป่วย/วัน × เวลาตรวจเฉลี่ย']];
+$('dpT').innerHTML=TL.map(t=>`<div class="tile"><small>${t[0]}</small><div class="v">${t[1]}<span>${t[2]}</span></div><div class="f">${t[3]}</div></div>`).join('');
+const hl=css('--chl'),gy=css('--cg'),s3=css('--s3'),tx=css('--tx');
+draw('c11',{type:'bar',data:{labels:ms.map(ymTH),datasets:[{type:'bar',label:'ผู้ป่วย/วันออกตรวจ',data:ms.map(m=>o.mo[m][1]?Math.round(o.mo[m][0]/o.mo[m][1]*10)/10:null),backgroundColor:hl,borderRadius:4,barPercentage:.6,yAxisID:'y',fmt:v=>v,order:2},
+{type:'line',label:'เวลาตรวจเฉลี่ย (นาที/ราย)',data:ms.map(m=>o.mo[m][3]?Math.round(o.mo[m][2]/o.mo[m][3]*10)/10:null),borderColor:s3,backgroundColor:s3,pointRadius:4,tension:.25,spanGaps:true,yAxisID:'y1',order:1}]},
+options:{layout:{padding:{top:18}},plugins:{tooltip:{mode:'index',intersect:false,callbacks:{footer:it=>{const m=o.mo[ms[it[0].dataIndex]];return'รวม '+F(m[0])+' ราย · '+m[1]+' วัน · รอพบแพทย์ '+(m[5]?r1(m[4]/m[5]):'–')+' นาที'}}}},
+scales:{x:{grid:{display:false}},y:{beginAtZero:true,title:{display:true,text:'ราย/วัน',color:css('--mut')}},y1:{position:'right',beginAtZero:true,grid:{display:false},border:{display:false},ticks:{color:css('--mut')},title:{display:true,text:'นาที',color:css('--mut')}}}}});
+const hs=o.h.reduce((a,b)=>a+b,0),as=DAV.h.reduce((a,b)=>a+b,0),pc=(h,t)=>h.map(x=>t?Math.round(x/t*1000)/10:null);empty('c12',!hs);
+draw('c12',{type:'bar',data:{labels:EBL.map(l=>l+' นาที'),datasets:[{label:o.nm.length>30?o.nm.slice(0,29)+'…':o.nm,data:pc(o.h,hs),backgroundColor:hl,borderRadius:4,fmt:v=>v?v+'%':null},{label:'แพทย์ทั้งหมด',data:pc(DAV.h,as),backgroundColor:gy,borderRadius:4}]},
+options:{layout:{padding:{top:18}},plugins:{tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.raw+'%'+(c.datasetIndex==0?' ('+F(o.h[c.dataIndex])+' ราย)':'')}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>v+'%'}}}}});
+$('dpCl').tBodies[0].innerHTML=o.cls.slice().sort((a,b)=>b.n-a.n).map(c=>{const g=agg(c);return`<tr><td>${esc(c.name)}</td><td>${F(c.n)}</td><td>${c.d}</td><td>${g.pd}</td><td>${r1(g.ex)}</td><td>${r1(g.wt)}</td></tr>`}).join('');
+if(scroll)$('dpC').scrollIntoView({behavior:'smooth',block:'start'})}
 // ---------- เปรียบเทียบโรงพยาบาล ----------
 let CMP=null,cH='รพ.สิรินธร',cP=null,cK='mean',cD=1;const TGT=60;
 const pill=(v,good,bad)=>`<span class="pill ${v>=good?'g':v>=bad?'y':'r'}">${r1(v)}%</span>`;
@@ -244,5 +285,6 @@ $('ctS').textContent=cP+(cP!=first?' · คอลัมน์เปลี่ย�
 $('hSel').onchange=e=>{cH=e.target.value;renderCmp()};
 fetch('/api/compare').then(r=>r.json()).then(d=>{CMP=d;cP=d.periods[d.periods.length-1];$('cmpSrc').href=d.sourceUrl;const m=d.meta||{};
 $('cmpUpd').textContent=m.source=='seed'?'(ข้อมูลตั้งต้นจากภาพหน้าจอ รอการซิงก์)':m.updated?'· อัปเดต '+new Date(m.updated).toLocaleString('th-TH'):'';renderCmp()}).catch(()=>{$('cmpUpd').textContent='โหลดข้อมูลเปรียบเทียบไม่สำเร็จ'});
-fetch('/api/data').then(r=>r.json()).then(d=>{RAW=d.rows||[];sel=new Set(RAW.map((_,i)=>i));const g=d.meta&&d.meta.range;const a=g&&g.appt,w=g&&g.walk;const lo=[a&&a[0],w&&w[0]].filter(Boolean).sort()[0],hi=[a&&a[1],w&&w[1]].filter(Boolean).sort().pop();$('rng').textContent=lo?lo+' ถึง '+hi:'ยังไม่มีข้อมูล';render()}).catch(()=>{$('rng').textContent='โหลดข้อมูลไม่สำเร็จ'});
+fetch('/api/docnames').then(r=>r.ok?r.json():{}).then(n=>{if(n&&Object.keys(n).length&&!Object.keys(DOCN).length){DOCN=n;if(RAW.length)render()}}).catch(()=>{});
+fetch('/api/data').then(r=>r.json()).then(d=>{RAW=d.rows||[];if(d.docNames&&Object.keys(d.docNames).length)DOCN=d.docNames;sel=new Set(RAW.map((_,i)=>i));const g=d.meta&&d.meta.range;const a=g&&g.appt,w=g&&g.walk;const lo=[a&&a[0],w&&w[0]].filter(Boolean).sort()[0],hi=[a&&a[1],w&&w[1]].filter(Boolean).sort().pop();$('rng').textContent=lo?lo+' ถึง '+hi:'ยังไม่มีข้อมูล';render()}).catch(()=>{$('rng').textContent='โหลดข้อมูลไม่สำเร็จ'});
 </script></body></html>
