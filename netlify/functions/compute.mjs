@@ -1,5 +1,6 @@
 const WD = ['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์'];
-export const EB = [5, 10, 15, 20, 30]; // ช่วงเวลาตรวจ (นาที): <5, 5–10, 10–15, 15–20, 20–30, ≥30
+export const EB = [5, 10, 15, 20, 30];
+export const WB = [30, 60, 90, 120]; // ช่วงเวลารอพบแพทย์ (นาที, ส่งตรวจ → พบแพทย์): ≤30, 31–60, 61–90, 91–120, >120 · เป้าหมาย ≤ 60 // ช่วงเวลาตรวจ (นาที): <5, 5–10, 10–15, 15–20, 20–30, ≥30
 // 1 รหัสคลินิก (lct) = 1 แถว  |  appt: [vn,lct,date,dct,...เวลา 5 ค่า]  walk: [vn,lct,date]  sched: [lct,day,doc,main,sub,quota,is1h]
 export function compute({ appt = [], walk = [], sched = [], names = {} }) {
   const m = new Map();
@@ -15,11 +16,14 @@ export function compute({ appt = [], walk = [], sched = [], names = {} }) {
     const [vn, lct, d, dct] = r, t = r.slice(4);
     const c = g(lct), k = vn + '|' + lct + '|' + d; if (c.ak.has(k)) continue;
     c.ak.add(k); c.dates.add(d); tally(c, d, 0); steps(c, d, t);
-    if (dct) { if (!c.dr.has(dct)) c.dr.set(dct, { n: 0, d: new Set(), e: 0, en: 0, w: 0, wn: 0, mo: new Map(), h: Array(EB.length + 1).fill(0) });   // รายแพทย์ (เฉพาะผู้ป่วยนัด)
+    if (dct) { if (!c.dr.has(dct)) c.dr.set(dct, { n: 0, d: new Set(), e: 0, en: 0, w: 0, wn: 0, mo: new Map(), h: Array(EB.length + 1).fill(0), wq: new Map() });   // รายแพทย์ (เฉพาะผู้ป่วยนัด)
       const o = c.dr.get(dct), ym = d.slice(0, 7); o.n++; o.d.add(d); const e = dur(t, 2), w = dur(t, 1);
       if (!o.mo.has(ym)) o.mo.set(ym, [0, new Set(), 0, 0, 0, 0]); const om = o.mo.get(ym); om[0]++; om[1].add(d);
       if (e != null) { o.e += e; o.en++; om[2] += e; om[3]++; let b = 0; while (b < EB.length && e >= EB[b]) b++; o.h[b]++; }
-      if (w != null) { o.w += w; o.wn++; om[4] += w; om[5]++; } }
+      if (w != null) { o.w += w; o.wn++; om[4] += w; om[5]++; }
+      const wt = t[0] != null && t[2] != null ? t[2] - t[0] : null; // รอพบแพทย์รวม: ส่งตรวจ → พบแพทย์ (แยกครึ่งเดือน YYYY-MM-1 = 1–15, -2 = 16–สิ้นเดือน)
+      if (wt != null && wt >= 0 && wt <= 600) { const hk = ym + (+d.slice(8, 10) <= 15 ? '-1' : '-2'); if (!o.wq.has(hk)) o.wq.set(hk, Array(WB.length + 1).fill(0));
+        let b = 0; while (b < WB.length && wt > WB[b]) b++; o.wq.get(hk)[b]++; } }
     if (dct) { if (!c.doc.has(d)) c.doc.set(d, new Set()); c.doc.get(d).add(dct); }
   }
   for (const r of walk) {
@@ -40,8 +44,9 @@ export function compute({ appt = [], walk = [], sched = [], names = {} }) {
     quota: c.qn ? Math.round(c.qs / c.qn * 10) / 10 : null,
     months: Object.fromEntries([...c.mon].sort().map(([k, v]) => [k, [v[0], v[1], v[2].size]])), wdays: c.wd.map(v => [v[0], v[1], v[2].size]),
     steps: Object.fromEntries([...c.stm].sort()),
-    // docs[dct] = [ราย, วัน, ผลรวมเวลาตรวจ, n, ผลรวมรอพบแพทย์, n, {YYYY-MM: [ราย, วัน, เวลาตรวจ, n, รอ, n]}, การกระจายเวลาตรวจ]
+    // docs[dct] = [ราย, วัน, ผลรวมเวลาตรวจ, n, ผลรวมรอพบแพทย์, n, {YYYY-MM: [ราย, วัน, เวลาตรวจ, n, รอ, n]}, การกระจายเวลาตรวจ, {YYYY-MM-1|2: การกระจายเวลารอพบแพทย์}]
     docs: Object.fromEntries([...c.dr].map(([k, o]) => [k, [o.n, o.d.size, o.e, o.en, o.w, o.wn,
-      Object.fromEntries([...o.mo].sort().map(([m, v]) => [m, [v[0], v[1].size, v[2], v[3], v[4], v[5]]])), o.h]])) }))
+      Object.fromEntries([...o.mo].sort().map(([m, v]) => [m, [v[0], v[1].size, v[2], v[3], v[4], v[5]]])), o.h,
+      Object.fromEntries([...o.wq].sort())]])) }))
     .sort((a, b) => (b.appt + b.walkOnly) / b.days - (a.appt + a.walkOnly) / a.days);
 }

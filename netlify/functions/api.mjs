@@ -10,7 +10,7 @@ const range = a => { const d = a.map(r => r[2]).filter(Boolean).sort(); return d
 async function rebuild() {
   const [appt, walk, sched] = await Promise.all([load('appt'), load('walk'), load('sched')]);
   const names = (await st().get('names', { type: 'json' })) || {}, docNames = (await st().get('docnames', { type: 'json' })) || {};
-  const out = { rows: compute({ appt, walk, sched, names }), docNames, meta: { v: 4, docNamed: Object.keys(docNames).length, updated: new Date().toISOString(),
+  const out = { rows: compute({ appt, walk, sched, names }), docNames, meta: { v: 5, docNamed: Object.keys(docNames).length, updated: new Date().toISOString(),
     counts: { appt: appt.length, walk: walk.length, sched: sched.length }, timed: { appt: appt.filter(r => r.length > 4).length, walk: walk.filter(r => r.length > 4).length }, range: { appt: range(appt), walk: range(walk) } } };
   await st().setJSON('result', out); return out.meta;
 }
@@ -18,7 +18,7 @@ export default async (req) => {
   const p = new URL(req.url).pathname.replace(/^\/api\/?/, '');
   if (req.method === 'GET' && p === 'data') {
     let res = await st().get('result', { type: 'json' });
-    if (res && res.rows?.length && !(res.meta?.v >= 4)) { try { await rebuild(); res = await st().get('result', { type: 'json' }); } catch {} } // ผลเก่ายังไม่มีข้อมูลรายเดือนของแพทย์
+    if (res && res.rows?.length && !(res.meta?.v >= 5)) { try { await rebuild(); res = await st().get('result', { type: 'json' }); } catch {} } // ผลเก่ายังไม่มีการกระจายเวลารอพบแพทย์รายแพทย์
     if (res) res.docNames = (await st().get('docnames', { type: 'json' })) || {}; // ชื่อแพทย์อ่านตรงจากที่เก็บเสมอ ไม่ขึ้นกับผลคำนวณ
     return J(res || { rows: [], docNames: {}, meta: { counts: { appt: 0, walk: 0, sched: 0 } } });
   }
